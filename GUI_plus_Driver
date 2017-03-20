@@ -1,0 +1,81 @@
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+import java.nio.file.*;
+
+public class Quizbowl extends JApplet{
+    private int APPLET_WIDTH = 300, APPLET_HEIGHT = 300;
+    private JButton nextClue;
+    private JButton newAnswer;
+    private JButton input;
+    //other buttons and labels
+    private JLabel answer;
+    private JLabel clue;
+    private JLabel noMoreClues;
+    //other instance data
+    private AnswerLine answerline;
+    
+    public void init(){
+        nextClue = new JButton("Next Clue");
+        nextClue.addActionListener(new NextClueListener());
+        newAnswer = new JButton("New Answerline");
+        newAnswer.addActionListener(new NewAnswerListener());
+        input = new JButton("Input");
+        input.addActionListener(new InputListener());
+        //other buttons
+
+        
+        answer = new JLabel ("");
+        clue = new JLabel ("");
+        noMoreClues = new JLabel ("No more clues.");
+        
+        Container cp = getContentPane();
+        cp.setBackground(Color.blue);
+        cp.setLayout(new FlowLayout());
+        cp.add(input);
+        cp.remove(input);
+        cp.add(newAnswer);
+        cp.add(clue);
+
+        
+        setSize(APPLET_WIDTH, APPLET_HEIGHT);
+    }
+    //all of the button listeners
+    private class NextClueListener implements ActionListener{
+        public void actionPerformed (ActionEvent event){ //what happens when the "next clue" button is pressed
+            String newClue = answerLine.newClue();
+            if(newClue.charAt(newClue.length()-1)=='$'){
+                clue.setText(newClue.substring(0, newClue.length()-1));
+                cp.add(noMoreClues);
+                repaint();
+            }else{
+                clue.setText(newClue);
+                repaint();
+            }
+        }
+    }
+    private class NewAnswerListener implements ActionListener{
+        public void actionPerformed (ActionEvent event){
+            //what happens when the "New Answerline" button is pressed
+            Path pathToAnswerLine;
+            //Go through Quizbowl folder, picking random folders until there are only files in the folder. The name of that folder is the answerline.
+            //Also keep track of a path, somehow
+            boolean folderInside = true;
+            int index;
+            while(folderInside==true){
+                
+                
+                for(int i=0; i<2/*number of items in the folder*/; i++);
+            }
+            //Create an AnswerLine object using the path to the directory
+            answerLine = new AnswerLine (pathToAnswerLine);
+            //Other GUI stuf happens here
+            
+        }
+    }
+    private class InputListener implements ActionListener{
+        public void actionPerformed (ActionEvent event){
+            //what happens when "Input" button is pressed
+        }
+    }
+}
