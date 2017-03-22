@@ -1,0 +1,144 @@
+import java.util.*;
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+import java.nio.file.*;
+import java.io.*;
+
+public class QuizBowlDriver{
+    public static void main(String[] args){
+        System.out.print('\u000C');
+        int choice;
+        boolean run = true, noMoreClues = false, answerSelected = false, displayAnswer = false, displayNoAnswerSelected = false, displayClues = false;
+        ArrayList<String> clueList = new ArrayList<String>();
+        AnswerLine answerLine = null;
+        Path dir = Paths.get("C:\\Quizbowl");
+        Scanner scan = new Scanner(System.in);
+        while(run==true){
+            
+            //No Answer Selected cases
+            if(displayNoAnswerSelected==false && (displayAnswer==true || answerSelected==false)){
+                try{
+                    answerLine.getAnswer();
+                }catch(NullPointerException x){
+                    System.out.println("No Answer Selected");
+                    displayNoAnswerSelected = true;
+                }
+            }
+            
+            //List of Clues
+            if(displayClues==true){
+                for(String clue: clueList){
+                    if(!clue.equals("")){
+                        System.out.println(clue);
+                    }    
+                }
+            }
+            
+            //New Clue
+            if(noMoreClues==false){
+                System.out.print("1. New Clue");
+            }else{
+                System.out.print("No More Clues");
+            }
+            
+            //New Answer Line
+            System.out.println("\n2. New Answer Line");
+            
+            //Show Answer
+            if(displayAnswer==false){
+                System.out.print("3. Show Answer");
+            }else{
+                try{
+                    System.out.print(answerLine.getAnswer());
+                }catch(NullPointerException x){
+                    System.out.print("3. Show Answer");
+                    displayAnswer = false;
+                }
+            }
+            
+            //End
+            System.out.println("\n4. End");
+            
+            //Menu things
+            choice = Integer.parseInt(scan.nextLine());   
+            System.out.print('\u000C');
+            displayNoAnswerSelected = false;
+            
+            
+            //Menu Options
+            
+            //New Clue
+            if(choice==1){
+                displayClues = true;
+                String newClue = "";
+                try{
+                    newClue = answerLine.newClue();
+                    if(newClue.charAt(newClue.length()-1)=='$'){
+                        clueList.add((newClue.substring(0, newClue.length()-1)));
+                        noMoreClues = true;
+                    }else{
+                        clueList.add(newClue);
+                    }
+                }catch(NullPointerException x){
+                    System.out.println("No Answer Selected");
+                    displayNoAnswerSelected = true;
+                }catch(StringIndexOutOfBoundsException x){
+                    System.out.print(newClue);
+                }
+            }
+            
+            //New Answer
+            if(choice==2){
+                displayClues = false;
+                clueList.clear();
+                //vv Temporary vv
+                dir = Paths.get("C:\\Quizbowl\\Literature\\RussianLit\\RussianSS").toAbsolutePath();//Replace this later with the actual starting file
+                //^^ Temporary ^^
+                ArrayList<Path> currentDirectoryStream = new ArrayList<Path>(); //ArrayList representing all of the elements inside the lowest directory of the path
+                boolean isDirectory = true;
+                int selection;
+                displayAnswer = false;
+                //Go through Quizbowl folder, picking random folders until there are only files in the folder. The path to that folder is the answerline.
+                while(isDirectory==true){
+                    try{
+                        DirectoryStream<Path> stream = Files.newDirectoryStream(dir);
+                        for(Path item: stream){
+                            currentDirectoryStream.add(item);       //add every item inside the lowest directory of pathToAnswerLine into an ArrayList
+                        }
+                        if(Files.isDirectory(currentDirectoryStream.get(0))==true){
+                            selection = ((int)Math.ceil(Math.random()*currentDirectoryStream.size()))-1; //picks a random number of an item in the directory
+                            dir = Paths.get(dir.toString() + "\\" + currentDirectoryStream.get(selection).getFileName()); //string path of current + filename of random one
+                            currentDirectoryStream.clear();                               //clears the ArrayList of contents of current directory
+                          //}else if(Files.isSymbolicLink(currentDirectoryStream.get(0))){
+                          //  dir = currentDirectoryStream.get(0);
+                        }else{
+                            isDirectory = false;                                    //will end the loop                            
+                        }    
+                    }catch(IOException | DirectoryIteratorException x){
+                        System.out.println(x);
+                    }
+                }
+                answerLine = new AnswerLine(dir);                                   //makes the answerline object out of the path to a lowest level directory
+                if(answerLine.getNumClues()==0){
+                    noMoreClues = true;
+                }else{
+                    noMoreClues = false;
+                }   
+                answerSelected = true;
+                //Literally what happens with choice 1, copied down here
+            }
+            
+            //Show Answer
+            if(choice==3){
+                displayAnswer = true;
+                answerSelected = false;
+            }
+            
+            //End
+            if(choice==4){
+                run = false;
+            }
+        }    
+    }
+}
