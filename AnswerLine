@@ -12,6 +12,7 @@ public class AnswerLine {
     private List<String> descriptionList = new ArrayList<String>(); //For reading contents of Description.txt
     private int count; //# of times newClue has been called
     private ArrayList<String> clueArrayList = new ArrayList<String>(); //Holds all possible clues for the answer line
+    private Path startingDir;
     
     public AnswerLine(Path path){
         pathTo = path.toAbsolutePath(); //Stores absolute path
@@ -23,24 +24,21 @@ public class AnswerLine {
         }catch (IOException e){
             System.out.println(e);
         } //Reads Description.txt for answer and description
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(pathTo)){
-            for (Path clue: stream){
-                if(!clue.getFileName().toString().equals("Description.txt")){//File is not description, so it is a clue
-                    try {
-                        List<String> currentClue = new ArrayList<String>();
-                        currentClue = Files.readAllLines(clue,StandardCharsets.UTF_8);
-                        clueArrayList.add(currentClue.get(0));//Write each clue to clueArrayList
-                    }catch (IOException e){
-                        System.out.println(e);
-                    }
-                }
-            }
-        }catch (IOException | DirectoryIteratorException x) {
-            System.out.println(x);
-        }
-        numClues = clueArrayList.size();
+        this.refreshClueArrayList();
     }
     
+    public AnswerLine(String directory){
+        Finder finder = new Finder(directory);
+        startingDir = Paths.get("C:\\Quizbowl");
+        try {
+            Files.walkFileTree(startingDir, finder);
+        }
+        catch(IOException x){
+            System.out.println(x);
+        }
+        pathTo = finder.getAnsDir();
+        this.refreshClueArrayList();
+    }
     public Path getAnswerLinePath(){
         return pathTo;
     }
@@ -76,6 +74,9 @@ public class AnswerLine {
         }catch (IOException e){
             System.out.println(e);
             }
+        this.refreshClueArrayList();
+    }
+    public void refreshClueArrayList(){
         clueArrayList.clear();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(pathTo)){
             for (Path clue: stream){
@@ -92,5 +93,6 @@ public class AnswerLine {
         }catch (IOException | DirectoryIteratorException x) {
             System.out.println(x);
         }
-	}
+        numClues = clueArrayList.size();
+    }
 }

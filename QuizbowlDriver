@@ -4,61 +4,83 @@ import java.awt.event.*;
 import javax.swing.*;
 import java.nio.file.*;
 import java.io.*;
+import java.lang.*;
+import java.nio.charset.StandardCharsets;
 
 public class QuizBowlDriver{
     public static void main(String[] args){
         System.out.print('\u000C');
         int choice;
         boolean run = true, noMoreClues = false, answerSelected = false, displayAnswer = false, displayNoAnswerSelected = false, displayClues = false;
+        boolean importMenu = false;
         ArrayList<String> clueList = new ArrayList<String>();
         AnswerLine answerLine = null;
         Path dir = Paths.get("C:\\Quizbowl");
         Scanner scan = new Scanner(System.in);
         while(run==true){
             
-            //No Answer Selected cases
-            if(displayNoAnswerSelected==false && (displayAnswer==true || answerSelected==false)){
-                try{
-                    answerLine.getAnswer();
-                }catch(NullPointerException x){
-                    System.out.println("No Answer Selected");
-                    displayNoAnswerSelected = true;
+            //Regular menu
+            if(importMenu==false){
+                //No Answer Selected cases
+                if(displayNoAnswerSelected==false && (displayAnswer==true || answerSelected==false)){
+                    try{
+                        answerLine.getAnswer();
+                    }catch(NullPointerException x){
+                        System.out.println("No Answer Selected");
+                        displayNoAnswerSelected = true;
+                    }
                 }
-            }
-            
-            //List of Clues
-            if(displayClues==true){
-                for(String clue: clueList){
-                    if(!clue.equals("")){
-                        System.out.println(clue);
-                    }    
+                
+                //List of Clues, if applicable
+                if(displayClues==true){
+                    for(String clue: clueList){
+                        if(!clue.equals("")){
+                            System.out.println(clue);
+                        }    
+                    }
                 }
-            }
-            
-            //New Clue
-            if(noMoreClues==false){
-                System.out.print("1. New Clue");
-            }else{
-                System.out.print("No More Clues");
-            }
-            
-            //New Answer Line
-            System.out.println("\n2. New Answer Line");
-            
-            //Show Answer
-            if(displayAnswer==false){
-                System.out.print("3. Show Answer");
-            }else{
-                try{
-                    System.out.print(answerLine.getAnswer());
-                }catch(NullPointerException x){
-                    System.out.print("3. Show Answer");
-                    displayAnswer = false;
+                
+                //Answer, if applicable
+                if(displayAnswer==true){
+                    try{
+                        System.out.println("ANSWER: " + answerLine.getAnswer());
+                    }catch(NullPointerException x){
+                        System.out.print("");
+                        displayAnswer = false;
+                    }
                 }
-            }
+                
+                //New Clue
+                if(noMoreClues==false){
+                    System.out.print("1. New Clue");
+                }else{
+                    System.out.print("No More Clues");
+                }
+                
+                //New Answer Line
+                System.out.println("\n2. New Answer Line");
+                
+                //Show Answer
+                System.out.println("3. Show Answer");
+                
+                //End
+                System.out.println("4. End");
+                
+                //Import
+                System.out.println("5. Import Menu");
+            }    
             
-            //End
-            System.out.println("\n4. End");
+            //ImportMenu
+            else{
+                //Back
+                System.out.println("6. Back");
+                
+                //Add Answer
+                System.out.println("7. Add Answer");
+                
+                //Add Clue
+                System.out.println("8. Add Clue");
+            }
             
             //Menu things
             choice = Integer.parseInt(scan.nextLine());   
@@ -69,7 +91,7 @@ public class QuizBowlDriver{
             //Menu Options
             
             //New Clue
-            if(choice==1){
+            if(importMenu==false && choice==1){
                 displayClues = true;
                 String newClue = "";
                 try{
@@ -89,7 +111,7 @@ public class QuizBowlDriver{
             }
             
             //New Answer
-            if(choice==2){
+            if(importMenu==false && choice==2){
                 displayClues = false;
                 clueList.clear();
                 //vv Temporary vv
@@ -110,8 +132,6 @@ public class QuizBowlDriver{
                             selection = ((int)Math.ceil(Math.random()*currentDirectoryStream.size()))-1; //picks a random number of an item in the directory
                             dir = Paths.get(dir.toString() + "\\" + currentDirectoryStream.get(selection).getFileName()); //string path of current + filename of random one
                             currentDirectoryStream.clear();                               //clears the ArrayList of contents of current directory
-                          //}else if(Files.isSymbolicLink(currentDirectoryStream.get(0))){
-                          //  dir = currentDirectoryStream.get(0);
                         }else{
                             isDirectory = false;                                    //will end the loop                            
                         }    
@@ -130,14 +150,77 @@ public class QuizBowlDriver{
             }
             
             //Show Answer
-            if(choice==3){
+            if(importMenu==false && choice==3){
                 displayAnswer = true;
                 answerSelected = false;
             }
             
             //End
-            if(choice==4){
+            if(importMenu==false && choice==4){
                 run = false;
+            }
+            
+            //Import (Menu to Import)
+            if(importMenu==false && choice==5){
+                importMenu = true;
+            }
+            
+            //Back (Import to Menu)
+            if(importMenu==true && choice==6){
+                importMenu = false;
+            }
+            if(importMenu==true && choice==7){
+                String directory, answer, category;
+                AnswerLine current;
+                Path pathToAnswer, pathToDescription;
+                System.out.println("6. Back\nEnter category for this answer:");
+                directory = scan.nextLine();
+                ArrayList<String> text = new ArrayList<String>();
+                if(!directory.equals("6")){
+                    System.out.println("Enter answer line:");
+                    answer = scan.nextLine();
+                    if(!answer.equals("6")){
+                        System.out.println("Enter description of answer:");
+                        category = scan.nextLine();
+                        if(!category.equals("6")){
+                            try{
+                                current = new AnswerLine(directory);
+                                pathToAnswer = Paths.get(current.getAnswerLinePath().toString() + "\\" + answer);
+                                Files.createDirectory(pathToAnswer);
+                                current = new AnswerLine(pathToAnswer);
+                                pathToDescription = Paths.get(current.getAnswerLinePath().toString() + "\\" + "Description.txt");
+                                text.add(answer);
+                                text.add(category);
+                                Files.write(pathToDescription, text, StandardCharsets.UTF_8);
+                            }catch(IOException e){
+                                System.out.println(e);
+                            }    
+                        }
+                    }
+                }
+                System.out.print('\u000C');
+            }
+            if(importMenu==true && choice==8){
+                String text = "", directory = "";
+                AnswerLine current;
+                System.out.println("6. Back\nEnter name of answer:");
+                directory = scan.nextLine();
+                System.out.print('\u000C');
+                if(!directory.equals("6")){
+                    while(!text.equals("6")){
+                        current = new AnswerLine(directory);
+                        System.out.println("6. Back\nEnter text for clue:");
+                        text = scan.nextLine();
+                        if(!text.equals("6")){
+                            current.refreshClueArrayList();
+                            current.addClue(text);
+                        }
+                        System.out.print('\u000C');
+                        if(!text.equals("6")){
+                            System.out.println("Clue Added");
+                        }    
+                    }
+                }    
             }
         }    
     }
